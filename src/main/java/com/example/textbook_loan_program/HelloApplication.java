@@ -6,8 +6,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-// thia is basic hello app
-// testing a a push to main
+
 public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
