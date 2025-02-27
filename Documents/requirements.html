@@ -3,14 +3,52 @@
 <head>
 	
 	<title>Textbook Loan Program Requirements</title>
+	<style>
+		body {font-family: Arial, sans-serif; margin: 20px; padding: 20px}
+		h1 {color: #333; text-align: center}
+		h2 {color: #333333}
+		.sections{margin-bottom: 30px}
+		.requirements{font-weight: bold}
+	</style>
 
 </head>
 <body>
 	<h1>Textbook Loan Program Requirements</h1>
-	<h2>Team members</h2>
-	<h2>Purpose</h2>
-	<h2>Requirements</h2>
-
+	<div class="sections">
+		<h2>Team members</h2>
+		<p>Jesse Pickard, Austin Jones, Dustin Zook</p>
+	</div>
+	
+	<div class="sections">
+		<h2>Purpose</h2>
+		<p>A software application that allows students to borrow textbooks, track loans, and manage returns within an
+			educational institution.</p>
+	</div>
+	
+	<div class="sections">
+		<h2>Requirements</h2>
+		
+		<p id="user_authentication"><span class="requirements">Name:</span> user_authentication<br>
+			<span class="requirements">Type:</span> Functional<br>
+			<span class="requirements">Summary:</span> Secure login for users and administrators.</p>
+		
+		<p id="book_search"><span class="requirements">Name:</span> book_search<br>
+			<span class="requirements">Type:</span> Functional<br>
+			<span class="requirements">Summary:</span> shall be able to search for textbooks using title, author, or ISBN.</p>
+		
+		<p id="book_reservation"><span class="requirements">Name:</span> book_reservation<br>
+			<span class="requirements">Type:</span> Functional<br>
+			<span class="requirements">Summary:</span> Students shall be able to place holds on textbooks.</p>
+		
+		<p id="database_integrity"><span class="requirements">Name:</span> database_integrity<br>
+			<span class="requirements">Type:</span> Constraint<br>
+			<span class="requirements">Summary:</span> The database must have data integrity and prevent duplicate records.</p>
+		
+		<p id="development_complexity"><span class="requirements">Name:</span> development_complexity<br>
+			<span class="requirements">Type:</span> Risk<br>
+			<span class="requirements">Summary:</span> Expanding beyond the core functionality may lead to missed deadlines.</p>
+	
+	</div>
 
 
 </body>
