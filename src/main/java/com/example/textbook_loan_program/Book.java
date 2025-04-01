@@ -20,4 +20,8 @@ public class Book {
     public void checkAvailability(String status){
         this.availabilityStatus = status;
     }
+
+    public String getAuthor() {
+        return author;
+    }
 }
