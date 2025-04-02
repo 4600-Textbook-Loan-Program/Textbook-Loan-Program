@@ -1,4 +1,4 @@
-package com.example.textbook_loan_program;
+package com.example.textbook_loan_program.view;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;

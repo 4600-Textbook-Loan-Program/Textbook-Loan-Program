@@ -1,6 +1,6 @@
-package com.example.textbook_loan_program;
+package com.example.textbook_loan_program.model;
 
-abstract class User {
+public abstract class User {
     protected int userId;
     protected String name;
     protected String email;
@@ -13,11 +13,23 @@ abstract class User {
         this.password = password;
     }
 
+    public User(String username, String password) {
+
+    }
+
     public void login(){
 
     }
 
     public void logout(){
 
+    }
+
+    public String getUsername() {
+        return null;
+    }
+
+    public String getPassword() {
+        return null;
     }
 }

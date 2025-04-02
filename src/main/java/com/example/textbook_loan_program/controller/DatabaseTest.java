@@ -1,11 +1,10 @@
-package com.example.textbook_loan_program;
+package com.example.textbook_loan_program.controller;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import com.example.textbook_loan_program.model.Book;
 
 public class DatabaseTest {
     public static void main(String[] args) {
-        Book book = BookApiClient.fetchBookInfo("The Hobbit");
+        Book book = BookService.fetchBookInfo("The Hobbit");
         if (book != null) {
             System.out.println("📗 " + book.getTitle() + " by " + book.getAuthor());
         } else {

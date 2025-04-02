@@ -78,7 +78,7 @@
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>
-                                com.example.textbook_loan_program/com.example.textbook_loan_program.HelloApplication
+                                com.example.textbook_loan_program/com.example.textbook_loan_program.view.HelloApplication
                             </mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>

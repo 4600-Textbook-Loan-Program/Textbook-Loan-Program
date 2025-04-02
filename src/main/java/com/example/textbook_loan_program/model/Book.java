@@ -1,4 +1,4 @@
-package com.example.textbook_loan_program;
+package com.example.textbook_loan_program.model;
 
 public class Book {
     private String isbn;
@@ -13,6 +13,10 @@ public class Book {
         this.availabilityStatus = availabilityStatus;
     }
 
+    public Book(int id, String title, String author, int quantity) {
+
+    }
+
     public String getTitle(){
         return title;
     }
@@ -23,5 +27,13 @@ public class Book {
 
     public String getAuthor() {
         return author;
+    }
+
+    public int getQuantity() {
+        return 0;
+    }
+
+    public int getId() {
+        return 0;
     }
 }

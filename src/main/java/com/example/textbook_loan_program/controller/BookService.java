@@ -1,5 +1,6 @@
-package com.example.textbook_loan_program;
+package com.example.textbook_loan_program.controller;
 
+import com.example.textbook_loan_program.model.Book;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -8,7 +9,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class BookApiClient {
+public class BookService {
     public static Book fetchBookInfo(String title) {
         try {
             String encodedTitle = title.replace(" ", "+");

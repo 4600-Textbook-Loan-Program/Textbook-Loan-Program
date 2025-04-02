@@ -1,4 +1,4 @@
-package com.example.textbook_loan_program;
+package com.example.textbook_loan_program.config;
 
 import java.io.InputStream;
 import java.util.Properties;

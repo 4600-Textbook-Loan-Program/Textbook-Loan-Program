@@ -1,4 +1,4 @@
-package com.example.textbook_loan_program;
+package com.example.textbook_loan_program.view;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

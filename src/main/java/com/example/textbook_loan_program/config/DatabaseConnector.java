@@ -1,4 +1,6 @@
-package com.example.textbook_loan_program;
+package com.example.textbook_loan_program.config;
+
+import com.example.textbook_loan_program.config.DatabaseConfig;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
