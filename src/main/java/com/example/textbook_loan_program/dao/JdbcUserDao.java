@@ -47,9 +47,14 @@ public class JdbcUserDao implements UserDao {
 
             if (rs.next()) {
                 String role = rs.getString("role");
-                return role.equals("admin") ?
-                        new Administrator(rs.getString("username"), rs.getString("password")) :
-                        new Student(rs.getString("username"), rs.getString("password"));
+                String user = rs.getString("username");
+                String pass = rs.getString("password");
+
+                if (role.equals("admin")) {
+                    return new Administrator(user, pass);
+                } else {
+                    return new Student(user, pass);
+                }
             }
 
         } catch (SQLException e) {

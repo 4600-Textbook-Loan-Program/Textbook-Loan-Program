@@ -21,9 +21,13 @@ public class JdbcBookDao implements BookDao{
             while (rs.next()) {
                 Book book = new Book(
                         rs.getInt("id"),
+                        rs.getString("isbn"),
                         rs.getString("title"),
                         rs.getString("author"),
-                        rs.getInt("quantity")
+                        rs.getInt("quantity"),
+                        rs.getString("availability_status"),
+                        rs.getString("cover_url"),
+                        rs.getString("description")
                 );
                 books.add(book);
             }
@@ -48,9 +52,13 @@ public class JdbcBookDao implements BookDao{
             if (rs.next()) {
                 return new Book(
                         rs.getInt("id"),
+                        rs.getString("isbn"),
                         rs.getString("title"),
                         rs.getString("author"),
-                        rs.getInt("quantity")
+                        rs.getInt("quantity"),
+                        rs.getString("availability_status"),
+                        rs.getString("cover_url"),
+                        rs.getString("description")
                 );
             }
 
@@ -62,21 +70,27 @@ public class JdbcBookDao implements BookDao{
     }
 
     @Override
-    public void save(Book book) {
-        String query = "INSERT INTO books (title, author, quantity) VALUES (?, ?, ?)";
+    public void save(Book book) throws SQLException {
+        String query = "INSERT INTO books (isbn, title, author, quantity, availability_status, cover_url, description) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
-            stmt.setString(1, book.getTitle());
-            stmt.setString(2, book.getAuthor());
-            stmt.setInt(3, book.getQuantity());
+            stmt.setString(1, book.getIsbn());
+            stmt.setString(2, book.getTitle());
+            stmt.setString(3, book.getAuthor());
+            stmt.setInt(4, book.getQuantity());
+            stmt.setString(5, book.getAvailabilityStatus());
+            stmt.setString(6, book.getCoverUrl());
+            stmt.setString(7, book.getDescription());
             stmt.executeUpdate();
 
         } catch (SQLException e) {
             e.printStackTrace();
+            throw e; // Optionally rethrow or handle accordingly
         }
     }
+
 
     @Override
     public void update(Book book) {
@@ -110,4 +124,34 @@ public class JdbcBookDao implements BookDao{
             e.printStackTrace();
         }
     }
+
+    public Book findByIsbn(String isbn) {
+        String query = "SELECT * FROM books WHERE isbn = ?";
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, isbn);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new Book(
+                        rs.getInt("id"),
+                        rs.getString("isbn"),
+                        rs.getString("title"),
+                        rs.getString("author"),
+                        rs.getInt("quantity"),
+                        rs.getString("availability_status"),
+                        rs.getString("cover_url"),
+                        rs.getString("description")
+                );
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
 }
