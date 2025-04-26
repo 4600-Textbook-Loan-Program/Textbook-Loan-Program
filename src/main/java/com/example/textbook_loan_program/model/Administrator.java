@@ -14,12 +14,7 @@ public class Administrator extends User {
         super(username, password);
     }
 
-    public void manageInventory(Book book, String action){
 
-    }
 
-    public void generateReports(String report){
-
-    }
 
 }
