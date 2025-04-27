@@ -3,6 +3,7 @@ package com.example.textbook_loan_program.dao;
 import com.example.textbook_loan_program.config.DatabaseConnector;
 import com.example.textbook_loan_program.model.Administrator;
 import com.example.textbook_loan_program.model.Student;
+import com.example.textbook_loan_program.model.StudentRecord;
 import com.example.textbook_loan_program.model.User;
 
 import java.sql.*;
@@ -94,5 +95,64 @@ public class JdbcUserDao implements UserDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<StudentRecord> findAllStudentLoanData() {
+        List<StudentRecord> students = new ArrayList<>();
+        String query = "SELECT u.username, u.role, COUNT(l.id) as totalLoans " +
+                "FROM users u LEFT JOIN loans l ON u.username = l.student_username " +
+                "WHERE u.role = 'student' " +
+                "GROUP BY u.username, u.role";
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                students.add(new StudentRecord(
+                        rs.getString("username"),
+                        rs.getString("role"),
+                        rs.getInt("totalLoans")
+                ));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return students;
+    }
+
+    public String findUsernameById(int id) {
+        String query = "SELECT username FROM users WHERE id = ?";
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("username");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // not found
+    }
+
+    public Integer findIdByUsername(String username) {
+        String query = "SELECT id FROM users WHERE username = ?";
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // user not found
     }
 }

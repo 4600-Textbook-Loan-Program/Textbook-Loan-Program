@@ -4,6 +4,7 @@ import com.example.textbook_loan_program.config.DatabaseConnector;
 import com.example.textbook_loan_program.model.Loan;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,5 +94,22 @@ public class JdbcLoanDao implements LoanDao {
                 rs.getDate("due_date").toLocalDate(),
                 rs.getDate("return_date") != null ? rs.getDate("return_date").toLocalDate() : null
         );
+    }
+
+    public void createLoan(int userId, int bookId) {
+        String query = "INSERT INTO loans (user_id, book_id, borrow_date, due_date) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, bookId);
+            stmt.setDate(3, java.sql.Date.valueOf(LocalDate.now()));
+            stmt.setDate(4, java.sql.Date.valueOf(LocalDate.now().plusMonths(3)));
+
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,13 +1,22 @@
 package com.example.textbook_loan_program.view;
 
 import com.example.textbook_loan_program.dao.JdbcBookDao;
+import com.example.textbook_loan_program.dao.JdbcHoldDao;
+import com.example.textbook_loan_program.dao.JdbcLoanDao;
+import com.example.textbook_loan_program.dao.JdbcUserDao;
 import com.example.textbook_loan_program.model.Book;
+import com.example.textbook_loan_program.model.Hold;
+import com.example.textbook_loan_program.model.StudentRecord;
 import com.example.textbook_loan_program.service.BookService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -15,8 +24,16 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.sql.SQLException;
+import java.util.List;
 
 public class AdminDashboard {
 
@@ -25,6 +42,12 @@ public class AdminDashboard {
     private static TextArea descriptionArea;
     private static TableView<Book> bookTable;
     private static ObservableList<Book> bookList;
+
+    private static void showAlert(Alert.AlertType type, String message) {
+        Alert alert = new Alert(type);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
 
     public static void show(Stage stage) {
         Label isbnLabel = new Label("ISBN:");
@@ -39,6 +62,11 @@ public class AdminDashboard {
         Button updateButton = new Button("Update Selected Book");
 
         Button clearButton = new Button("Clear");
+
+        Button checkoutButton = new Button("Checkout Book to Student");
+
+        Button generateBookReportButton = new Button("Generate Book Report");
+        Button generateStudentReportButton = new Button("Generate Student Report");
 
         Label titleLabel = new Label("Title:");
         TextField titleField = new TextField();
@@ -121,12 +149,10 @@ public class AdminDashboard {
                 confirmAlert.showAndWait().ifPresent(response -> {
                     if (response == ButtonType.OK) {
                         if (selectedBook.getQuantity() > 1) {
-                            // Reduce quantity by 1
                             selectedBook.setQuantity(selectedBook.getQuantity() - 1);
                             bookDao.update(selectedBook);
                             bookList.setAll(bookDao.findAll());
                         } else {
-                            // Last copy - delete the book
                             bookDao.delete(selectedBook.getId());
                             bookList.remove(selectedBook);
                         }
@@ -159,7 +185,6 @@ public class AdminDashboard {
             }
         });
 
-
         clearButton.setOnAction(e -> {
             isbnField.clear();
             titleField.clear();
@@ -170,6 +195,147 @@ public class AdminDashboard {
             statusLabel.setText("");
         });
 
+        generateBookReportButton.setOnAction(e -> {
+            try (Workbook workbook = new XSSFWorkbook()) {
+                List<Book> books = bookDao.findAll();
+                String timestamp = java.time.LocalDateTime.now().toString().replace(":", "-");
+                Sheet sheet = workbook.createSheet("Books");
+                Row header = sheet.createRow(0);
+
+                header.createCell(0).setCellValue("ISBN");
+                header.createCell(1).setCellValue("Title");
+                header.createCell(2).setCellValue("Author");
+                header.createCell(3).setCellValue("Quantity");
+                header.createCell(4).setCellValue("Availability Status");
+                header.createCell(5).setCellValue("Description");
+                header.createCell(6).setCellValue("Cover URL");
+
+                int rowNum = 1;
+                for (Book book : books) {
+                    Row row = sheet.createRow(rowNum++);
+                    row.createCell(0).setCellValue(book.getIsbn());
+                    row.createCell(1).setCellValue(book.getTitle());
+                    row.createCell(2).setCellValue(book.getAuthor());
+                    row.createCell(3).setCellValue(book.getQuantity());
+                    row.createCell(4).setCellValue(book.getAvailabilityStatus());
+                    row.createCell(5).setCellValue(book.getDescription());
+                    row.createCell(6).setCellValue(book.getCoverUrl());
+                }
+
+                File file = new File("Books_Report_" + timestamp + ".xlsx");
+                FileOutputStream fileOut = new FileOutputStream(file);
+                workbook.write(fileOut);
+                fileOut.close();
+
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(file);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        generateStudentReportButton.setOnAction(e -> {
+            try (Workbook workbook = new XSSFWorkbook()) {
+                List<StudentRecord> students = bookDao.findAllStudentLoanData();
+                Sheet sheet = workbook.createSheet("Students");
+                Row header = sheet.createRow(0);
+
+                header.createCell(0).setCellValue("Username");
+                header.createCell(1).setCellValue("Role");
+                header.createCell(2).setCellValue("Total Loans");
+
+                int rowNum = 1;
+                for (StudentRecord student : students) {
+                    Row row = sheet.createRow(rowNum++);
+                    row.createCell(0).setCellValue(student.getUsername());
+                    row.createCell(1).setCellValue(student.getRole());
+                    row.createCell(2).setCellValue(student.getTotalLoans());
+                }
+
+                String timestamp = java.time.LocalDateTime.now().toString().replace(":", "-");
+                File file = new File("Students_Report_" + timestamp + ".xlsx");
+                FileOutputStream fileOut = new FileOutputStream(file);
+                workbook.write(fileOut);
+                fileOut.close();
+
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(file);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        checkoutButton.setOnAction(e -> {
+            Book selectedBook = bookTable.getSelectionModel().getSelectedItem();
+            if (selectedBook == null) {
+                showAlert(Alert.AlertType.ERROR, "Please select a book to checkout.");
+                return;
+            }
+
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Checkout Book");
+            dialog.setHeaderText("Enter Student Username for Checkout:");
+            dialog.setContentText("Username:");
+
+            dialog.showAndWait().ifPresent(username -> {
+                JdbcHoldDao holdDao = new JdbcHoldDao();
+                JdbcLoanDao loanDao = new JdbcLoanDao();
+                JdbcUserDao userDao = new JdbcUserDao();
+
+                holdDao.deleteExpiredHolds();
+
+                Integer userId = userDao.findIdByUsername(username);
+
+                if (userId == null) {
+                    showAlert(Alert.AlertType.ERROR, "No user found with username: " + username);
+                    return;
+                }
+
+                List<Hold> holds = holdDao.findHoldsForBook(selectedBook.getId());
+
+                if (holds.isEmpty()) {
+                    showAlert(Alert.AlertType.ERROR, "No active holds for this book.");
+                    return;
+                }
+
+                Hold firstHold = holds.get(0);
+
+                if (!firstHold.getStudentUsername().equals(username)) {
+                    showAlert(Alert.AlertType.ERROR, "Student is not first in the hold queue.");
+                    return;
+                }
+
+                if (selectedBook.getQuantity() <= 0) {
+                    showAlert(Alert.AlertType.ERROR, "No available copies.");
+                    return;
+                }
+
+                Alert confirmCheckout = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmCheckout.setTitle("Confirm Checkout");
+                confirmCheckout.setHeaderText("Confirm Book Checkout");
+                confirmCheckout.setContentText(
+                        "Book: " + selectedBook.getTitle() + "\n" +
+                                "To Student: " + username + "\n\n" +
+                                "Do you want to proceed with checkout?"
+                );
+
+                confirmCheckout.showAndWait().ifPresent(response -> {
+                    if (response == ButtonType.OK) {
+                        selectedBook.setQuantity(selectedBook.getQuantity() - 1);
+                        bookDao.update(selectedBook);
+
+                        loanDao.createLoan(userId, selectedBook.getId());
+                        holdDao.deleteHold(firstHold.getId());
+
+                        bookList.setAll(bookDao.findAll());
+
+                        showAlert(Alert.AlertType.INFORMATION, "Book successfully checked out to " + username + "!");
+                    }
+                });
+            });
+        });
 
         bookTable = new TableView<>();
         bookTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
@@ -201,8 +367,6 @@ public class AdminDashboard {
 
         TableColumn<Book, Integer> quantityCol = new TableColumn<>("Quantity");
         quantityCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
-
-
 
         TableColumn<Book, String> descriptionCol = new TableColumn<>("Description");
         descriptionCol.setCellValueFactory(new PropertyValueFactory<>("description"));
@@ -237,12 +401,10 @@ public class AdminDashboard {
         form.add(coverLabel, 0, 5);
         form.add(coverView, 1, 5);
 
-        HBox buttons = new HBox(10, addButton, deleteButton,updateButton, clearButton, refreshButton);
+        HBox buttons = new HBox(10, addButton, deleteButton,updateButton, clearButton, refreshButton, checkoutButton, generateBookReportButton, generateStudentReportButton);
         VBox layout = new VBox(20, form, buttons, statusLabel, new Label("All Books in System:"), bookTable);
         layout.setPadding(new Insets(20));
         layout.setStyle("-fx-font-size: 14px; -fx-font-family: 'Arial'; -fx-background-color: #f9f9f9;");
-
-
 
         Scene scene = new Scene(layout, 1000, 850);
         stage.setScene(scene);

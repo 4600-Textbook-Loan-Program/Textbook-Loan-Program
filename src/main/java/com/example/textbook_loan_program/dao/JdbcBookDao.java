@@ -2,6 +2,7 @@ package com.example.textbook_loan_program.dao;
 
 import com.example.textbook_loan_program.config.DatabaseConnector;
 import com.example.textbook_loan_program.model.Book;
+import com.example.textbook_loan_program.model.StudentRecord;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -87,7 +88,7 @@ public class JdbcBookDao implements BookDao{
 
         } catch (SQLException e) {
             e.printStackTrace();
-            throw e; // Optionally rethrow or handle accordingly
+            throw e;
         }
     }
 
@@ -153,5 +154,36 @@ public class JdbcBookDao implements BookDao{
 
         return null;
     }
+
+    public List<StudentRecord> findAllStudentLoanData() {
+        List<StudentRecord> students = new ArrayList<>();
+
+        String query = """
+            SELECT u.username, u.role, COUNT(l.id) AS total_loans
+            FROM users u
+            LEFT JOIN loans l ON u.username = l.student_username
+            GROUP BY u.username, u.role
+            """;
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                StudentRecord student = new StudentRecord(
+                        rs.getString("username"),
+                        rs.getString("role"),
+                        rs.getInt("total_loans")
+                );
+                students.add(student);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return students;
+    }
+
 
 }
