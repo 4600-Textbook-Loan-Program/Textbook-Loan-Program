@@ -37,7 +37,7 @@ public class LoginController {
                 if (user instanceof Administrator) {
                     AdminDashboard.show(primaryStage);
                 } else if (user instanceof Student) {
-                    StudentDashboard.show(primaryStage);
+                     StudentDashboard.show(primaryStage, (Student) user);
                 }
             } else {
                 statusLabel.setText("Invalid username or password");
