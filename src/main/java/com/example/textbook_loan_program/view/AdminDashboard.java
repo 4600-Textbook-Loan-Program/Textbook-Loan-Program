@@ -457,7 +457,7 @@ public class AdminDashboard {
         form.add(coverLabel, 0, 5);
         form.add(coverView, 1, 5);
 
-        HBox buttons = new HBox(10, addButton, deleteButton,updateButton, clearButton, refreshButton, checkoutButton, generateBookReportButton, generateStudentReportButton);
+        HBox buttons = new HBox(10, addButton, deleteButton,updateButton, clearButton, refreshButton, checkoutButton, returnButton, generateBookReportButton, generateStudentReportButton);
         VBox layout = new VBox(20, form, buttons, statusLabel, new Label("All Books in System:"), bookTable);
         layout.setPadding(new Insets(20));
         layout.setStyle("-fx-font-size: 14px; -fx-font-family: 'Arial'; -fx-background-color: #f9f9f9;");
