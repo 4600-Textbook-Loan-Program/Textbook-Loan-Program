@@ -15,7 +15,14 @@ public class HelloApplication extends Application {
     public static void main(String[] args) {
         launch(args);
     }
+
+    public static void showLoginScreen(Stage stage) {
+        LoginController loginController = new LoginController();
+        loginController.showLoginScreen(stage);
+    }
 }
+
+
 
 
 

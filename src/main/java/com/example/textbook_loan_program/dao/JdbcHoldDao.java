@@ -54,4 +54,21 @@ public class JdbcHoldDao {
             e.printStackTrace();
         }
     }
+
+    public boolean addHold(String studentUsername, int bookId) {
+        String sql = "INSERT INTO holds (student_username, book_id, hold_date) VALUES (?, ?, ?)";
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, studentUsername);
+            stmt.setInt(2, bookId);
+            stmt.setDate(3, java.sql.Date.valueOf(LocalDate.now()));
+            int rows = stmt.executeUpdate();
+
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

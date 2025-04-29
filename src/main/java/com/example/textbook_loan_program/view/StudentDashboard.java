@@ -74,14 +74,36 @@ public class StudentDashboard {
         Button placeHoldButton = new Button("Place Hold");
         Button historyButton = new Button("View Loan History");
         Button refreshButton = new Button("Refresh List");
+        Button signOutButton = new Button("Sign Out");
+        Button clearButton = new Button("Clear");
+
 
         searchButton.setOnAction(e -> {
-            Book book = BookService.fetchBookByIsbn(isbnField.getText().trim());
-            if (book != null) {
-                updateBookDetailFields(book, titleField, authorField, descriptionArea, coverUrlField, coverView);
-                statusLabel.setText("Book found.");
+            String isbn = isbnField.getText().trim();
+
+            if (isbn.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Please enter an ISBN.");
+                return;
+            }
+
+            Book foundBook = bookDao.findByIsbn(isbn);
+
+            if (foundBook != null) {
+                titleField.setText(foundBook.getTitle());
+                authorField.setText(foundBook.getAuthor());
+                descriptionArea.setText(foundBook.getDescription());
+                coverUrlField.setText(foundBook.getCoverUrl());
+
+                if (foundBook.getCoverUrl() != null && !foundBook.getCoverUrl().isEmpty()) {
+                    coverView.setImage(new Image(foundBook.getCoverUrl()));
+                } else {
+                    coverView.setImage(null);
+                }
+
+                bookTable.getSelectionModel().select(foundBook);
+                bookTable.scrollTo(foundBook);
             } else {
-                statusLabel.setText("Book not found.");
+                showAlert(Alert.AlertType.ERROR, "Book not found in the database.");
             }
         });
 
@@ -97,25 +119,21 @@ public class StudentDashboard {
 
             if (alreadyHeld) {
                 showAlert(Alert.AlertType.INFORMATION, "You already have a hold on this book.");
+            }
+
+            boolean success = holdDao.addHold(username, selectedBook.getId());
+
+            if (success) {
+                showAlert(Alert.AlertType.INFORMATION, "Hold placed successfully!");
             } else {
-                try (java.sql.Connection conn = com.example.textbook_loan_program.config.DatabaseConnector.getConnection();
-                     java.sql.PreparedStatement stmt = conn.prepareStatement("INSERT INTO holds (student_username, book_id, hold_date) VALUES (?, ?, ?)");) {
-                    stmt.setString(1, username);
-                    stmt.setInt(2, selectedBook.getId());
-                    stmt.setDate(3, java.sql.Date.valueOf(java.time.LocalDate.now()));
-                    stmt.executeUpdate();
-                    showAlert(Alert.AlertType.INFORMATION, "Hold placed successfully for book: " + selectedBook.getTitle());
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    showAlert(Alert.AlertType.ERROR, "Failed to place hold.");
-                }
+                showAlert(Alert.AlertType.ERROR, "Failed to place hold.");
             }
         });
 
         historyButton.setOnAction(e -> {
             List<Loan> allLoans = loanDao.findAll();
             List<Loan> userLoans = allLoans.stream()
-                    .filter(loan -> loan.getUserId() == userId)
+                    .filter(loan -> loan.getStudentUsername().equals(username))
                     .collect(Collectors.toList());
 
             StringBuilder history = new StringBuilder();
@@ -133,9 +151,24 @@ public class StudentDashboard {
             historyAlert.showAndWait();
         });
 
+        clearButton.setOnAction(e -> {
+            isbnField.clear();
+            titleField.clear();
+            authorField.clear();
+            descriptionArea.clear();
+            coverUrlField.clear();
+            coverView.setImage(null);
+            bookTable.getSelectionModel().clearSelection();
+            bookList.setAll(bookDao.findAll());
+        });
+
         refreshButton.setOnAction(e -> {
             bookList.setAll(bookDao.findAll());
             statusLabel.setText("List refreshed.");
+        });
+
+        signOutButton.setOnAction(e -> {
+            HelloApplication.showLoginScreen(stage);
         });
 
         bookTable = new TableView<>();
@@ -183,15 +216,16 @@ public class StudentDashboard {
         form.add(coverLabel, 0, 5);
         form.add(coverView, 1, 5);
 
-        HBox buttons = new HBox(10, placeHoldButton, historyButton, refreshButton);
+        HBox buttons = new HBox(10, placeHoldButton, historyButton,clearButton, refreshButton, signOutButton);
 
         VBox layout = new VBox(20, welcomeLabel, form, buttons, statusLabel, new Label("Available Books:"), bookTable);
         layout.setPadding(new Insets(20));
         layout.setStyle("-fx-font-size: 14px; -fx-font-family: 'Arial'; -fx-background-color: #f0f0f0;");
 
-        Scene scene = new Scene(layout, 900, 750);
+        Scene scene = new Scene(layout, 1200, 800);
         stage.setScene(scene);
         stage.setTitle("Student Dashboard");
+        stage.setMaximized(true);
         stage.show();
     }
 

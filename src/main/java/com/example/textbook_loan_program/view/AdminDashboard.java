@@ -70,6 +70,8 @@ public class AdminDashboard {
         Button generateBookReportButton = new Button("Generate Book Report");
         Button generateStudentReportButton = new Button("Generate Student Report");
 
+        Button signOutButton = new Button("Sign Out");
+
         Label titleLabel = new Label("Title:");
         TextField titleField = new TextField();
 
@@ -239,7 +241,8 @@ public class AdminDashboard {
 
         generateStudentReportButton.setOnAction(e -> {
             try (Workbook workbook = new XSSFWorkbook()) {
-                List<StudentRecord> students = bookDao.findAllStudentLoanData();
+                JdbcLoanDao loanDao = new JdbcLoanDao();
+                List<StudentRecord> students = loanDao.findAllStudentLoanData();
                 Sheet sheet = workbook.createSheet("Students");
                 Row header = sheet.createRow(0);
 
@@ -328,7 +331,7 @@ public class AdminDashboard {
                         selectedBook.setQuantity(selectedBook.getQuantity() - 1);
                         bookDao.update(selectedBook);
 
-                        loanDao.createLoan(userId, selectedBook.getId());
+                        loanDao.createLoan(username, selectedBook.getId());
                         holdDao.deleteHold(firstHold.getId());
 
                         bookList.setAll(bookDao.findAll());
@@ -362,7 +365,7 @@ public class AdminDashboard {
                 }
 
 
-                Loan loan = loanDao.findActiveLoan(userId, selectedBook.getId());
+                Loan loan = loanDao.findActiveLoan(username, selectedBook.getId());
                 if (loan == null) {
                     showAlert(Alert.AlertType.ERROR, "No active loan found for this student and book.");
                     return;
@@ -391,6 +394,10 @@ public class AdminDashboard {
                     }
                 });
             });
+        });
+
+        signOutButton.setOnAction(e -> {
+            HelloApplication.showLoginScreen(stage);
         });
 
         bookTable = new TableView<>();
@@ -457,7 +464,7 @@ public class AdminDashboard {
         form.add(coverLabel, 0, 5);
         form.add(coverView, 1, 5);
 
-        HBox buttons = new HBox(10, addButton, deleteButton,updateButton, clearButton, refreshButton, checkoutButton, returnButton, generateBookReportButton, generateStudentReportButton);
+        HBox buttons = new HBox(10, addButton, deleteButton,updateButton, clearButton, refreshButton, checkoutButton, returnButton, generateBookReportButton, generateStudentReportButton, signOutButton);
         VBox layout = new VBox(20, form, buttons, statusLabel, new Label("All Books in System:"), bookTable);
         layout.setPadding(new Insets(20));
         layout.setStyle("-fx-font-size: 14px; -fx-font-family: 'Arial'; -fx-background-color: #f9f9f9;");
@@ -465,6 +472,7 @@ public class AdminDashboard {
         Scene scene = new Scene(layout, 1000, 850);
         stage.setScene(scene);
         stage.setTitle("Admin Dashboard - Book Management");
+        stage.setMaximized(true);
         stage.show();
     }
 }
