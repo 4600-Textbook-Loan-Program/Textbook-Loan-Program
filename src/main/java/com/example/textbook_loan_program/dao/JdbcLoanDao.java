@@ -112,4 +112,43 @@ public class JdbcLoanDao implements LoanDao {
             e.printStackTrace();
         }
     }
+
+    public Loan findActiveLoan(int userId, int bookId) {
+        String query = "SELECT * FROM loans WHERE user_id = ? AND book_id = ? AND return_date IS NULL";
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, bookId);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new Loan(
+                        rs.getInt("id"),
+                        rs.getInt("user_id"),
+                        rs.getInt("book_id"),
+                        rs.getDate("borrow_date").toLocalDate(),
+                        rs.getDate("due_date").toLocalDate(),
+                        null // Not returned yet
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void markAsReturned(int loanId) {
+        String query = "UPDATE loans SET return_date = GETDATE() WHERE id = ?";
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, loanId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -6,6 +6,7 @@ import com.example.textbook_loan_program.dao.JdbcLoanDao;
 import com.example.textbook_loan_program.dao.JdbcUserDao;
 import com.example.textbook_loan_program.model.Book;
 import com.example.textbook_loan_program.model.Hold;
+import com.example.textbook_loan_program.model.Loan;
 import com.example.textbook_loan_program.model.StudentRecord;
 import com.example.textbook_loan_program.service.BookService;
 import javafx.collections.FXCollections;
@@ -64,6 +65,7 @@ public class AdminDashboard {
         Button clearButton = new Button("Clear");
 
         Button checkoutButton = new Button("Checkout Book to Student");
+        Button returnButton = new Button("Return Book");
 
         Button generateBookReportButton = new Button("Generate Book Report");
         Button generateStudentReportButton = new Button("Generate Student Report");
@@ -332,6 +334,60 @@ public class AdminDashboard {
                         bookList.setAll(bookDao.findAll());
 
                         showAlert(Alert.AlertType.INFORMATION, "Book successfully checked out to " + username + "!");
+                    }
+                });
+            });
+        });
+
+        returnButton.setOnAction(e -> {
+            Book selectedBook = bookTable.getSelectionModel().getSelectedItem();
+            if (selectedBook == null) {
+                showAlert(Alert.AlertType.ERROR, "Please select a book to return.");
+                return;
+            }
+
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Return Book");
+            dialog.setHeaderText("Enter Student Username:");
+            dialog.setContentText("Username:");
+
+            dialog.showAndWait().ifPresent(username -> {
+                JdbcLoanDao loanDao = new JdbcLoanDao();
+                JdbcUserDao userDao = new JdbcUserDao();
+
+                Integer userId = userDao.findIdByUsername(username);
+                if (userId == null) {
+                    showAlert(Alert.AlertType.ERROR, "No user found with username: " + username);
+                    return;
+                }
+
+
+                Loan loan = loanDao.findActiveLoan(userId, selectedBook.getId());
+                if (loan == null) {
+                    showAlert(Alert.AlertType.ERROR, "No active loan found for this student and book.");
+                    return;
+                }
+
+
+                Alert confirmReturn = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmReturn.setTitle("Confirm Return");
+                confirmReturn.setHeaderText("Confirm Book Return");
+                confirmReturn.setContentText(
+                        "Book: " + selectedBook.getTitle() + "\n" +
+                                "Student: " + username + "\n\n" +
+                                "Mark as returned?"
+                );
+
+                confirmReturn.showAndWait().ifPresent(response -> {
+                    if (response == ButtonType.OK) {
+                        loanDao.markAsReturned(loan.getId());
+
+                        selectedBook.setQuantity(selectedBook.getQuantity() + 1);
+                        bookDao.update(selectedBook);
+
+                        bookList.setAll(bookDao.findAll());
+
+                        showAlert(Alert.AlertType.INFORMATION, "Book successfully returned!");
                     }
                 });
             });
